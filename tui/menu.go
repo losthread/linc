@@ -55,6 +55,14 @@ func toggleSetting(items []string, index int, on, off string) {
 	}
 }
 
+func settingLabel(name string, enabled bool) string {
+	state := "OFF"
+	if enabled {
+		state = "ON"
+	}
+	return fmt.Sprintf("%-19s%s", name, state)
+}
+
 // SetDB configures the database used by the TUI.
 func SetDB(database *sql.DB) {
 	db = database
@@ -69,14 +77,6 @@ func SetDB(database *sql.DB) {
 		settingsOptions[7] = fmt.Sprintf("Timestamps          %s", setting.Timestamp)
 		use24HourTimestamps = setting.Timestamp == "24H"
 	}
-}
-
-func settingLabel(name string, enabled bool) string {
-	state := "OFF"
-	if enabled {
-		state = "ON"
-	}
-	return fmt.Sprintf("%-19s%s", name, state)
 }
 
 func saveSettings(items []string) {
@@ -249,7 +249,7 @@ func renderUsernameChange() {
 			if db == nil {
 				return
 			}
-			if err := identity.ChangeUsername(db, input.String()); err != nil {
+			if err := identity.UpdateUsername(db, input.String()); err != nil {
 				fmt.Printf("\n%sUnable to change username: %v%s\nPress any key...", white, err, reset)
 				_, _ = readKey()
 			}
@@ -271,7 +271,7 @@ func renderUsernameChange() {
 	}
 }
 
-// exportIdentity displays the suggested identity export path.
+// exportIdentity writes the encrypted identity backup to Downloads.
 func exportIdentity() {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -279,17 +279,14 @@ func exportIdentity() {
 		return
 	}
 	path := filepath.Join(home, "Downloads", "den-identity.json")
-	data, err := identity.Export(db)
-	if err == nil {
-		err = os.WriteFile(path, data, 0600)
-	}
-	if err != nil {
+	if err := identity.ExportIdentity(db, "data/identity.key", path); err != nil {
 		identityMessage("Export failed: " + err.Error())
 		return
 	}
 	identityMessage("Identity exported to " + path)
 }
 
+// importIdentity imports an encrypted identity backup from Downloads.
 func importIdentity() {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -297,11 +294,7 @@ func importIdentity() {
 		return
 	}
 	path := filepath.Join(home, "Downloads", "den-identity.json")
-	data, err := os.ReadFile(path)
-	if err == nil {
-		err = identity.Import(db, data)
-	}
-	if err != nil {
+	if err := identity.ImportIdentity(db, "data/identity.key", path); err != nil {
 		identityMessage("Import failed: " + err.Error())
 		return
 	}
