@@ -1,4 +1,4 @@
-module den
+module linc
 
 go 1.26.0
 

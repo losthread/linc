@@ -1,6 +1,6 @@
-# Den
+# Linc
 
-Den is a fast, private peer-to-peer messenger for direct communication between devices, written in Go.
+Linc is a fast, private peer-to-peer messenger for direct communication between devices, written in Go.
 Offline communication over local Bluetooth Low Energy (BLE) mesh networks, with WebRTC-based peer-to-peer connectivity across local and remote networks.
 
 ## Status

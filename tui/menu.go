@@ -1,8 +1,8 @@
 // File: tui/menu.go
-// Description: Renders and controls Den's terminal interface.
+// Description: Renders and controls Linc's terminal interface.
 // Author: Parth Naik
 //
-// Package tui renders Den's terminal interface.
+// Package tui renders Linc's terminal interface.
 package tui
 
 import (
@@ -14,17 +14,17 @@ import (
 	"syscall"
 	"unsafe"
 
-	"den/shared/identity"
-	"den/shared/settings"
+	"linc/shared/identity"
+	"linc/shared/settings"
 )
 
 const banner = `
-  ██████╗  ███████╗ ███╗   ██╗
-  ██╔══██╗ ██╔════╝ ████╗  ██║
-  ██║  ██║ █████╗   ██╔██╗ ██║
-  ██║  ██║ ██╔══╝   ██║╚██╗██║
-  ██████╔╝ ███████╗ ██║ ╚████║
-  ╚═════╝  ╚══════╝ ╚═╝  ╚═══╝
+  ██╗     ██╗███╗   ██╗ ██████╗
+  ██║     ██║████╗  ██║██╔════╝
+  ██║     ██║██╔██╗ ██║██║     
+  ██║     ██║██║╚██╗██║██║     
+  ███████╗██║██║ ╚████║╚██████╗
+  ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝
 `
 
 var options = []string{"Direct Chat", "Group Chat", "Identity", "Settings", "Quit"}
@@ -156,7 +156,7 @@ func render(selected int) {
 	fmt.Printf("%sBLE: ON  ·  WebRTC: READY  ·  PEERS: 0\n", white)
 	fmt.Printf("↑↓ Navigate  ·  ENTER Select  ·  Q Quit%s\n", reset)
 	fmt.Println()
-	fmt.Println("DEN v0.1.0")
+	fmt.Println("LINC v0.1.0")
 }
 
 type submenuRenderer func([]string, int)
@@ -278,7 +278,7 @@ func exportIdentity() {
 		identityMessage("Export failed: " + err.Error())
 		return
 	}
-	path := filepath.Join(home, "Downloads", "den-identity.json")
+	path := filepath.Join(home, "Downloads", "linc-identity.json")
 	if err := identity.ExportIdentity(db, "data/identity.key", path); err != nil {
 		identityMessage("Export failed: " + err.Error())
 		return
@@ -293,7 +293,7 @@ func importIdentity() {
 		identityMessage("Import failed: " + err.Error())
 		return
 	}
-	path := filepath.Join(home, "Downloads", "den-identity.json")
+	path := filepath.Join(home, "Downloads", "linc-identity.json")
 	if err := identity.ImportIdentity(db, "data/identity.key", path); err != nil {
 		identityMessage("Import failed: " + err.Error())
 		return

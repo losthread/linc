@@ -1,18 +1,19 @@
 // File: cmd/tui/main.go
-// Description: Initializes Den's database and starts the TUI.
+// Description: Initializes Linc's database and starts the TUI.
 // Author: Parth Naik
 //
-// Package main is the entrypoint to DEN's TUI.
+// Package main is the entrypoint to LINC's TUI.
 package main
 
 import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"den/shared/identity"
-	"den/tui"
+	"linc/shared/identity"
+	"linc/tui"
 	_ "modernc.org/sqlite"
 )
 
@@ -27,7 +28,17 @@ func main() {
 		fmt.Fprintln(os.Stderr, "database:", err)
 		os.Exit(1)
 	}
-	db, err := sql.Open("sqlite", "data/den.db")
+	dbPath := filepath.Join("data", "linc.db")
+	legacyDBPath := filepath.Join("data", "den.db")
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		if _, err := os.Stat(legacyDBPath); err == nil {
+			if err := os.Rename(legacyDBPath, dbPath); err != nil {
+				fmt.Fprintln(os.Stderr, "database migration:", err)
+				os.Exit(1)
+			}
+		}
+	}
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "database:", err)
 		os.Exit(1)
