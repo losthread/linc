@@ -28,7 +28,7 @@ const banner = `
 `
 
 var options = []string{"Direct Chat", "Group Chat", "Identity", "Settings", "Quit"}
-var identityOptions = []string{"Change Username", "Show Public Key", "Export Identity", "Import Identity", "Back"}
+var identityOptions = []string{"Change Username", "Show Nostr Identity", "Export Identity", "Import Identity", "Back"}
 var settingsOptions = []string{"Bluetooth           ON", "WebRTC              ON", "Mesh Relaying       ON", "Max Relay Hops      5", "Peer Discovery      ON", "Notifications       ON", "Incoming Requests   ASK", "Timestamps          12H", "Back"}
 
 var use24HourTimestamps bool
@@ -44,6 +44,24 @@ func currentUsername() string {
 		return "anonymous"
 	}
 	return value.Username
+}
+
+func currentNPub() string {
+	if db == nil {
+		return "unavailable"
+	}
+	value, err := identity.NPub(db)
+	if err != nil {
+		return "unavailable"
+	}
+	return value
+}
+
+func shortIdentity(value string) string {
+	if len(value) <= 24 {
+		return value
+	}
+	return value[:12] + "..." + value[len(value)-8:]
 }
 
 // toggleSetting switches a setting between two labels.
@@ -210,8 +228,8 @@ func submenu(title string, items []string, draw submenuRenderer) error {
 				renderUsernameChange()
 				continue
 			}
-			if title == "IDENTITY" && items[selected] == "Show Public Key" {
-				showPublicKey()
+			if title == "IDENTITY" && items[selected] == "Show Nostr Identity" {
+				showNostrIdentity()
 				continue
 			}
 			if title == "IDENTITY" && items[selected] == "Export Identity" {
@@ -309,15 +327,14 @@ func identityMessage(message string) {
 	_, _ = readKey()
 }
 
-// showPublicKey displays the public key screen.
-// showPublicKey displays the stored public key.
-func showPublicKey() {
-	key, err := identity.PublicKeyText(db)
+// showNostrIdentity displays the shareable NIP-19 public identity.
+func showNostrIdentity() {
+	npub, err := identity.NPub(db)
 	if err != nil {
-		identityMessage("Unable to read public key: " + err.Error())
+		identityMessage("Unable to read Nostr identity: " + err.Error())
 		return
 	}
-	identityMessage("Public key (Ed25519): " + key)
+	identityMessage("Nostr identity: " + npub)
 }
 
 // identityRender draws the identity submenu.
@@ -326,8 +343,7 @@ func identityRender(items []string, selected int) {
 	fmt.Printf("%sIDENTITY%s\n", white, reset)
 	fmt.Println("────────────────────────────────────")
 	fmt.Printf("%sUsername      %s\n", white, currentUsername())
-	fmt.Printf("Peer ID       7f3a...91bc\n")
-	fmt.Printf("Public Key    ed25519:ab82...f12e%s\n", reset)
+	fmt.Printf("Nostr npub    %s%s\n", shortIdentity(currentNPub()), reset)
 	fmt.Println()
 	menuRender(items, selected)
 	fmt.Println("────────────────────────────────────")

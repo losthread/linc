@@ -18,7 +18,8 @@
 coverage.out
 *.prof
 
-# SQLite
+# Local identity and SQLite
+/data/*
 *.db
 *.db-shm
 *.db-wal

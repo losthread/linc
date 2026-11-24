@@ -1,9 +1,8 @@
 CREATE TABLE IF NOT EXISTS identity (
-    peer_id BLOB PRIMARY KEY,
+    public_key TEXT PRIMARY KEY,
     username TEXT NOT NULL DEFAULT 'anonymous',
-    public_key BLOB NOT NULL,
-    encrypted_private_key BLOB NOT NULL DEFAULT x'',
-    nonce BLOB NOT NULL DEFAULT x''
+    encrypted_private_key BLOB NOT NULL,
+    nonce BLOB NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS settings (

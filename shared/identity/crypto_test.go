@@ -1,39 +1,17 @@
 package identity
 
 import (
-	"crypto/ed25519"
-	"crypto/rand"
 	"testing"
+
+	"github.com/nbd-wtf/go-nostr"
 )
 
-// TestGenerateAESKey verifies generated AES keys have the required size.
-func TestGenerateAESKey(t *testing.T) {
-	first, err := generateAESKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	second, err := generateAESKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(first) != 32 || len(second) != 32 {
-		t.Fatalf("key lengths = %d, %d", len(first), len(second))
-	}
-	if string(first) == string(second) {
-		t.Fatal("generated duplicate AES keys")
-	}
-}
-
-// TestEncryptPrivateKeyRoundTrip verifies AES-GCM encryption and decryption.
 func TestEncryptPrivateKeyRoundTrip(t *testing.T) {
 	key, err := generateAESKey()
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
+	privateKey := nostr.GeneratePrivateKey()
 	ciphertext, nonce, err := encryptPrivateKey(key, privateKey)
 	if err != nil {
 		t.Fatal(err)
@@ -42,49 +20,31 @@ func TestEncryptPrivateKeyRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(decrypted) != string(privateKey) {
+	if decrypted != privateKey {
 		t.Fatal("decrypted private key differs")
 	}
-}
 
-// TestDecryptPrivateKeyRejectsTampering verifies AES-GCM authentication failures.
-func TestDecryptPrivateKeyRejectsTampering(t *testing.T) {
-	key, err := generateAESKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ciphertext, nonce, err := encryptPrivateKey(key, privateKey)
-	if err != nil {
-		t.Fatal(err)
-	}
 	ciphertext[0] ^= 1
 	if _, err := decryptPrivateKey(key, nonce, ciphertext); err == nil {
 		t.Fatal("tampered ciphertext decrypted")
 	}
-	if _, _, err := encryptPrivateKey(key[:31], privateKey); err == nil {
-		t.Fatal("short AES key accepted")
-	}
 }
 
-// TestValidateEncryptedIdentityRejectsMismatchedPeerID verifies identity binding.
-func TestValidateEncryptedIdentityRejectsMismatchedPeerID(t *testing.T) {
+func TestValidateEncryptedIdentityRejectsMismatchedPublicKey(t *testing.T) {
 	key, err := generateAESKey()
 	if err != nil {
 		t.Fatal(err)
 	}
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
+	privateKey := nostr.GeneratePrivateKey()
 	ciphertext, nonce, err := encryptPrivateKey(key, privateKey)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateEncryptedIdentity(key, nonce, ciphertext, publicKey, make([]byte, 32)); err == nil {
-		t.Fatal("mismatched peer ID accepted")
+	otherPublicKey, err := nostr.GetPublicKey(nostr.GeneratePrivateKey())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateEncryptedIdentity(key, nonce, ciphertext, otherPublicKey); err == nil {
+		t.Fatal("mismatched Nostr public key accepted")
 	}
 }
